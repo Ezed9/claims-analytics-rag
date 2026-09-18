@@ -153,25 +153,22 @@ def _generate_situating_sentence(doc_title: str, chunk_text: str) -> str | None:
         "within the document, for search retrieval purposes. Return only the sentence."
     )
     provider = resolve_provider()
-    try:
-        if provider == "gemini":
-            from google import genai
+    if provider == "gemini":
+        from google import genai
 
-            client = genai.Client()
-            response = client.models.generate_content(model=GEMINI_MODEL_NAME, contents=prompt)
-            return response.text.strip()
-        if provider == "anthropic":
-            import anthropic
+        client = genai.Client()
+        response = client.models.generate_content(model=GEMINI_MODEL_NAME, contents=prompt)
+        return response.text.strip()
+    if provider == "anthropic":
+        import anthropic
 
-            client = anthropic.Anthropic()
-            response = client.messages.create(
-                model=ANTHROPIC_MODEL_NAME,
-                max_tokens=64,
-                messages=[{"role": "user", "content": prompt}],
-            )
-            return response.content[0].text.strip()
-    except Exception:
-        return None
+        client = anthropic.Anthropic()
+        response = client.messages.create(
+            model=ANTHROPIC_MODEL_NAME,
+            max_tokens=64,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.content[0].text.strip()
     return None
 
 
@@ -180,8 +177,7 @@ def _chunk_for_subblock(
 ) -> list[Chunk]:
     pieces = _split_long_text(text) if len(text.split()) > MAX_CHUNK_WORDS else [text]
     chunks: list[Chunk] = []
-    cache = _load_cache() if has_active_llm() else {}
-    cache_dirty = False
+    cache = _load_cache()
 
     for index, piece in enumerate(pieces):
         suffix = "" if len(pieces) == 1 else f"-{chr(ord('a') + index)}"
@@ -189,15 +185,9 @@ def _chunk_for_subblock(
         header = f"[Document: {doc_title} | Scope: {scope} | Section: {heading_path}]"
         contextualized_text = f"{header}\n{piece}"
 
-        if has_active_llm():
-            situating = cache.get(chunk_id)
-            if situating is None:
-                situating = _generate_situating_sentence(doc_title, piece)
-                if situating:
-                    cache[chunk_id] = situating
-                    cache_dirty = True
-            if situating:
-                contextualized_text = f"{header}\n{situating}\n{piece}"
+        situating = cache.get(chunk_id)
+        if situating:
+            contextualized_text = f"{header}\n{situating}\n{piece}"
 
         chunks.append(
             Chunk(
@@ -211,8 +201,6 @@ def _chunk_for_subblock(
             )
         )
 
-    if cache_dirty:
-        _save_cache(cache)
     return chunks
 
 
@@ -237,6 +225,27 @@ def build_chunks(docs_dir: Path = DOCS_DIR) -> list[Chunk]:
     return chunks
 
 
+def build_context_cache() -> None:
+    if not has_active_llm():
+        raise RuntimeError("Set GEMINI_API_KEY or ANTHROPIC_API_KEY to generate situating sentences.")
+    cache = _load_cache()
+    chunks = build_chunks()
+    missing = [chunk for chunk in chunks if chunk.chunk_id not in cache]
+    print(f"{len(chunks) - len(missing)}/{len(chunks)} chunks already have context; generating {len(missing)}.")
+    try:
+        for chunk in missing:
+            situating = _generate_situating_sentence(chunk.doc_title, chunk.raw_text)
+            if situating:
+                cache[chunk.chunk_id] = situating
+                print(f"  {chunk.chunk_id}: {situating}")
+    finally:
+        _save_cache(cache)
+        print(f"Saved {len(cache)}/{len(chunks)} situating sentences to {CHUNK_CONTEXT_CACHE_PATH}.")
+
+
 if __name__ == "__main__":
-    for chunk in build_chunks():
-        print(chunk.chunk_id, "|", chunk.heading_path, "|", len(chunk.raw_text.split()), "words")
+    if "--build-context" in sys.argv:
+        build_context_cache()
+    else:
+        for chunk in build_chunks():
+            print(chunk.chunk_id, "|", chunk.heading_path, "|", len(chunk.raw_text.split()), "words")

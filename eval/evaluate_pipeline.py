@@ -1,3 +1,4 @@
+import argparse
 import json
 import statistics
 import sys
@@ -38,16 +39,12 @@ def _retrieve_and_rerank(query: str, mode: str) -> list[str]:
 
 
 def _run_ragas_metrics(cases: list[dict[str, Any]], case_results: list[dict[str, Any]]) -> None:
-    from langchain_huggingface import HuggingFaceEmbeddings
     from ragas import SingleTurnSample
-    from ragas.embeddings import LangchainEmbeddingsWrapper
     from ragas.metrics import Faithfulness, LLMContextPrecisionWithReference
 
-    from src.config import EMBED_MODEL_NAME
     from src.llm_client import judge_llm
 
     judge = judge_llm()
-    embeddings = LangchainEmbeddingsWrapper(HuggingFaceEmbeddings(model_name=EMBED_MODEL_NAME))
     faithfulness_metric = Faithfulness(llm=judge)
     context_precision_metric = LLMContextPrecisionWithReference(llm=judge)
 
@@ -73,10 +70,9 @@ def _run_ragas_metrics(cases: list[dict[str, Any]], case_results: list[dict[str,
             result["faithfulness"] = None
             result["context_precision_llm"] = None
             result["ragas_error"] = str(exc)
-    _ = embeddings  # embeddings wrapper is wired for parity with the Ragas judge configuration
 
 
-def evaluate() -> dict[str, Any]:
+def evaluate(ragas_limit: int | None = None) -> dict[str, Any]:
     cases = _load_golden_dataset()
     case_results: list[dict[str, Any]] = []
 
@@ -113,7 +109,7 @@ def evaluate() -> dict[str, Any]:
 
     ragas_skipped_reason = None
     if has_active_llm():
-        _run_ragas_metrics(cases, case_results)
+        _run_ragas_metrics(cases[:ragas_limit], case_results[:ragas_limit])
     else:
         ragas_skipped_reason = (
             "No GEMINI_API_KEY or ANTHROPIC_API_KEY set; Ragas LLM-judged metrics "
@@ -125,6 +121,9 @@ def evaluate() -> dict[str, Any]:
     hybrid_scores = [r["context_precision_hybrid_contextual"] for r in case_results]
     dense_scores = [r["context_precision_dense_raw"] for r in case_results]
     faithfulness_scores = [r["faithfulness"] for r in case_results if r["faithfulness"] is not None]
+    llm_precision_scores = [
+        r["context_precision_llm"] for r in case_results if r["context_precision_llm"] is not None
+    ]
 
     summary = {
         "num_cases": len(case_results),
@@ -138,6 +137,14 @@ def evaluate() -> dict[str, Any]:
         "faithfulness_mean": round(statistics.mean(faithfulness_scores), 4)
         if faithfulness_scores
         else None,
+        "faithfulness_std": round(statistics.pstdev(faithfulness_scores), 4)
+        if faithfulness_scores
+        else None,
+        "context_precision_llm_mean": round(statistics.mean(llm_precision_scores), 4)
+        if llm_precision_scores
+        else None,
+        "ragas_cases_scored": len(faithfulness_scores),
+        "ragas_errors": sum(1 for r in case_results if "ragas_error" in r),
         "ragas_skipped_reason": ragas_skipped_reason,
     }
 
@@ -163,8 +170,27 @@ def _print_summary(output: dict[str, Any]) -> None:
     if summary["ragas_skipped_reason"]:
         print(f"Ragas LLM metrics skipped: {summary['ragas_skipped_reason']}")
     else:
-        print(f"Ragas faithfulness mean: {summary['faithfulness_mean']}")
+        print(
+            f"Ragas scored {summary['ragas_cases_scored']} cases "
+            f"({summary['ragas_errors']} judge errors)"
+        )
+        if summary["faithfulness_mean"] is not None:
+            print(
+                f"Ragas faithfulness: {summary['faithfulness_mean']:.4f} "
+                f"± {summary['faithfulness_std']:.4f}"
+            )
+            print(f"Ragas LLM context precision: {summary['context_precision_llm_mean']:.4f}")
+        errors = [r["ragas_error"] for r in output["cases"] if "ragas_error" in r]
+        if errors:
+            print(f"First judge error: {errors[0][:300]}")
 
 
 if __name__ == "__main__":
-    _print_summary(evaluate())
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--ragas-limit",
+        type=int,
+        default=None,
+        help="Score only the first N cases with the Ragas LLM judge (free-tier quotas).",
+    )
+    _print_summary(evaluate(parser.parse_args().ragas_limit))

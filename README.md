@@ -55,8 +55,10 @@ flowchart LR
   short/fragmented chunk (e.g. a SOP's "Parts and Labor" clause) still
   carries the repair-type and device context needed for lexical (BM25) and
   dense retrieval to find it. An optional LLM-generated situating sentence
-  (Anthropic's Contextual Retrieval technique) is added on top when a key
-  is available, and cached to `data/chunk_context_cache.json`.
+  (Anthropic's Contextual Retrieval technique) is generated once at
+  ingestion time (`python src/rag/contextual_chunker.py --build-context`),
+  cached to `data/chunk_context_cache.json`, and only read at query time —
+  retrieval never calls an LLM.
 - **Prompt caching.** The Anthropic path marks the policy-handbook system
   block `cache_control: {"type": "ephemeral"}` so repeated triage calls
   against the same handbook reuse the cached prefix.
@@ -93,13 +95,24 @@ python eval/statistical_significance.py
 streamlit run src/dashboard/app.py
 ```
 
+With an LLM key, build the contextual-retrieval index once (resumable; it
+stops cleanly on a quota error and picks up where it left off), and cap the
+Ragas judge on free-tier quotas:
+
+```bash
+python src/rag/contextual_chunker.py --build-context
+python eval/evaluate_pipeline.py --ragas-limit 5
+```
+
 ## LLM Provider Switch
 
 Set `LLM_PROVIDER=gemini` or `LLM_PROVIDER=anthropic` in `.env`, or leave it
 unset — the app auto-detects `gemini` if `GEMINI_API_KEY` is set, then
 `anthropic` if `ANTHROPIC_API_KEY` is set, and otherwise falls back to the
-deterministic `rule_based_fallback` extractor. Every audit log records
-`llm_provider` and `model_name` regardless of which path ran.
+deterministic `rule_based_fallback` extractor. Every audit log records the
+`llm_provider` and `model_name` that actually produced the extraction — if an
+LLM call fails, the fallback is logged as a warning and attributed as
+`rule_based_fallback`. Override the Gemini model with `GEMINI_MODEL`.
 
 ## MCP Server (Claude Desktop)
 
