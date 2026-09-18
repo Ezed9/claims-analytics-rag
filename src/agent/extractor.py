@@ -1,3 +1,4 @@
+import logging
 import re
 import sys
 from enum import Enum
@@ -11,6 +12,8 @@ if str(REPO_ROOT) not in sys.path:
 
 from src.llm_client import extract_with_tool
 
+logger = logging.getLogger(__name__)
+
 
 class IncidentType(str, Enum):
     SCREEN_DAMAGE = "SCREEN_DAMAGE"
@@ -22,8 +25,11 @@ class IncidentType(str, Enum):
 
 
 class ExtractedClaimInfo(BaseModel):
-    device_brand: str | None = Field(default=None)
-    device_model: str | None = Field(default=None)
+    device_brand: str | None = Field(default=None, description="Manufacturer, e.g. 'Apple', 'Samsung', 'Google'.")
+    device_model: str | None = Field(
+        default=None,
+        description="Full model name including product line, e.g. 'iPhone 15 Pro', 'Galaxy S24', 'Pixel 9'.",
+    )
     incident_type: IncidentType
     damage_symptoms: list[str] = Field(default_factory=list)
     incident_date: str | None = Field(default=None)
@@ -63,7 +69,7 @@ DEVICE_PATTERNS = [
 
 INCIDENT_KEYWORDS = [
     (IncidentType.LOST_STOLEN, ["stolen", "lost", "missing", "theft", "break-in"]),
-    (IncidentType.LIQUID_DAMAGE, ["liquid", "water", "spill", "submerged", "rain", "wet"]),
+    (IncidentType.LIQUID_DAMAGE, ["liquid", "water", "spill", "submerged", "rain", "wet", "pool", "toilet", "sink", "ocean", "coffee"]),
     (IncidentType.BATTERY, ["battery", "drain", "shut down", "swollen", "swelling"]),
     (IncidentType.SCREEN_DAMAGE, ["screen", "spiderweb", "touch input", "touch response"]),
     (
@@ -106,6 +112,16 @@ def _match_carrier(claim_text: str) -> str | None:
         if carrier.lower() in claim_text.lower():
             return carrier
     return None
+
+
+def _canonicalize_device(info: ExtractedClaimInfo, claim_text: str) -> ExtractedClaimInfo:
+    llm_device_text = f"{info.device_brand or ''} {info.device_model or ''}"
+    brand, model = _match_device(llm_device_text)
+    if model is None:
+        brand, model = _match_device(claim_text)
+    if model is None:
+        return info
+    return info.model_copy(update={"device_brand": brand, "device_model": model})
 
 
 def extract_rule_based(claim_text: str, carrier_hint: str | None = None) -> ExtractedClaimInfo:
@@ -152,8 +168,10 @@ def extract_claim_info(
         extracted = dict(result["extracted"])
         extracted.setdefault("carrier", carrier_hint)
         extracted["extraction_method"] = result["llm_provider"]
-        return ExtractedClaimInfo.model_validate(extracted)
-    except Exception:
+        info = ExtractedClaimInfo.model_validate(extracted)
+        return _canonicalize_device(info, claim_text)
+    except Exception as exc:
+        logger.warning(f"LLM extraction failed ({type(exc).__name__}: {str(exc)[:160]}); using rule-based fallback")
         return extract_rule_based(claim_text, carrier_hint)
 
 

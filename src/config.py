@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -5,6 +6,12 @@ from dotenv import load_dotenv
 
 REPO_ROOT: Path = Path(__file__).resolve().parent.parent
 load_dotenv(REPO_ROOT / ".env")
+
+# Configured before mcp's MCPServer() so its RichHandler basicConfig becomes a no-op.
+logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+for _noisy in ("httpx", "httpcore", "google_genai", "sentence_transformers"):
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
+os.environ.setdefault("HF_HUB_VERBOSITY", "error")
 
 DATA_DIR: Path = REPO_ROOT / "data"
 DOCS_DIR: Path = DATA_DIR / "raw_documents"
@@ -32,7 +39,7 @@ RERANK_TOP_N: int = 3
 RERANK_THRESHOLD: float = 0.60
 REPAIR_THRESHOLD: float = 0.65
 
-GEMINI_MODEL_NAME: str = "gemini-2.5-flash"
+GEMINI_MODEL_NAME: str = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 ANTHROPIC_MODEL_NAME: str = "claude-sonnet-5"
 
 

@@ -11,7 +11,7 @@ from src.agent.audit_logger import write_audit_log
 from src.agent.economic_engine import compute_economics
 from src.agent.extractor import extract_claim_info
 from src.agent.mcp_server import search_repair_sops, verify_policy_rules
-from src.config import resolve_provider
+from src.config import ANTHROPIC_MODEL_NAME, GEMINI_MODEL_NAME
 
 
 def run_triage(
@@ -63,19 +63,18 @@ def run_triage(
             else:
                 verdict = breakdown.recommended_action
 
-    provider = resolve_provider()
+    provider = extraction.extraction_method
     model_name = {
-        "anthropic": "claude-sonnet-5",
-        "gemini": "gemini-2.5-flash",
-        "none": "rule_based_fallback",
-    }[provider if provider in ("anthropic", "gemini") else "none"]
+        "anthropic": ANTHROPIC_MODEL_NAME,
+        "gemini": GEMINI_MODEL_NAME,
+    }.get(provider, "rule_based_fallback")
 
     audit_record = {
         "claim_text": claim_text,
         "carrier": carrier,
         "device_model": device_model,
         "claim_date": claim_date,
-        "extraction": extraction.model_dump(),
+        "extraction": extraction.model_dump(mode="json"),
         "policy_check": policy_check,
         "evidence": evidence,
         "economics": economics,
@@ -87,7 +86,7 @@ def run_triage(
 
     return {
         "verdict": verdict,
-        "extraction": extraction.model_dump(),
+        "extraction": extraction.model_dump(mode="json"),
         "policy_check": policy_check,
         "evidence": evidence,
         "economics": economics,

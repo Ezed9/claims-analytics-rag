@@ -9,3 +9,5 @@ audit_logs/*.json
 eval/results.json
 .DS_Store
 .ruff_cache/
+.agents/
+.claude/
