@@ -234,7 +234,12 @@ def build_context_cache() -> None:
     print(f"{len(chunks) - len(missing)}/{len(chunks)} chunks already have context; generating {len(missing)}.")
     try:
         for chunk in missing:
-            situating = _generate_situating_sentence(chunk.doc_title, chunk.raw_text)
+            try:
+                situating = _generate_situating_sentence(chunk.doc_title, chunk.raw_text)
+            except Exception as exc:
+                print(f"Stopped at {chunk.chunk_id}: {type(exc).__name__}: {str(exc)[:160]}")
+                print("Re-run later (or set GEMINI_MODEL to a model with remaining quota) to resume.")
+                break
             if situating:
                 cache[chunk.chunk_id] = situating
                 print(f"  {chunk.chunk_id}: {situating}")
