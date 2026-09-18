@@ -1,0 +1,332 @@
+[
+  {
+    "case_id": "C01",
+    "claim_text": "Customer's iPhone 15 screen is cracked after being dropped at home; touch input is unresponsive in one corner.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "SCREEN_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "Verizon Total Mobile Protection covers screen damage with a $29 deductible once the 15-day waiting period has passed; the depot screen-repair cost is far below the replacement threshold, so the claim should be recommended for repair.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.1",
+      "sop_iphone15_repair#2.1",
+      "sop_iphone15_repair#2.3"
+    ]
+  },
+  {
+    "case_id": "C02",
+    "claim_text": "iPhone 15 Pro Max was submerged in water during a hiking trip and will not power on.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "LIQUID_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "Verizon covers liquid damage with a $99 deductible; the SOP liquid-damage remediation cost is well under the replacement threshold, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.2",
+      "sop_iphone15_repair#6.1",
+      "sop_iphone15_repair#6.3"
+    ]
+  },
+  {
+    "case_id": "C03",
+    "claim_text": "iPhone 15 Plus shuts down unexpectedly at 30% battery during normal use.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "BATTERY",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "Verizon covers battery malfunction with a $49 deductible; battery replacement is cheap relative to the device, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.4",
+      "sop_iphone15_repair#3.1",
+      "sop_iphone15_repair#3.3"
+    ]
+  },
+  {
+    "case_id": "C04",
+    "claim_text": "iPhone 15 Pro camera stopped focusing and now produces blurry images.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "HARDWARE_MALFUNCTION",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "Verizon covers non-battery hardware malfunctions like a failing camera module with a $49 deductible; camera module replacement is cheap relative to the device, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.5",
+      "sop_iphone15_repair#7.1",
+      "sop_iphone15_repair#7.3"
+    ]
+  },
+  {
+    "case_id": "C05",
+    "claim_text": "iPhone 15 back glass is shattered and the frame is bent after a fall in a parking lot.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "OTHER_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "Verizon covers other accidental damage such as back-glass cracks with a $99 deductible; back-glass replacement is cheap relative to the device, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.6",
+      "sop_iphone15_repair#4.1",
+      "sop_iphone15_repair#4.3"
+    ]
+  },
+  {
+    "case_id": "C06",
+    "claim_text": "iPhone 15 Pro Max charging port is bent and the cable will not stay connected after a trip.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "OTHER_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "Verizon covers other accidental damage such as a bent charging port with a $99 deductible; charging-port replacement is cheap relative to the device, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.6",
+      "sop_iphone15_repair#5.1",
+      "sop_iphone15_repair#5.3"
+    ]
+  },
+  {
+    "case_id": "C07",
+    "claim_text": "Customer's iPhone 15 was stolen from their bag while on public transit.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "LOST_STOLEN",
+    "expected_verdict": "RECOMMEND_REPLACEMENT",
+    "ground_truth_answer": "Verizon covers lost or stolen devices with a $199 deductible; a stolen device cannot be repaired, so replacement is the only available remedy.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.3"
+    ]
+  },
+  {
+    "case_id": "C08",
+    "claim_text": "iPhone 15 Plus screen is cracked after being dropped at the gym.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "policy_effective_date": "2025-06-10",
+    "expected_incident_type": "SCREEN_DAMAGE",
+    "expected_verdict": "DENIED_WAITING_PERIOD",
+    "ground_truth_answer": "The device was enrolled only 5 days before the claim, inside Verizon's 15-day waiting period, so the claim is denied under DENIED_WAITING_PERIOD regardless of incident type.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.1",
+      "sop_iphone15_repair#2.1",
+      "sop_iphone15_repair#2.3"
+    ]
+  },
+  {
+    "case_id": "C09",
+    "claim_text": "Customer's iPhone 15 screen is cracked after being dropped at home.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "SCREEN_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "AppleCare+ covers screen damage with a $29 deductible and no waiting period; screen repair cost is far below the replacement threshold, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_applecare#2.1",
+      "sop_iphone15_repair#2.1",
+      "sop_iphone15_repair#2.3"
+    ]
+  },
+  {
+    "case_id": "C10",
+    "claim_text": "iPhone 15 Pro was submerged in water during a rainstorm and will not power on.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "LIQUID_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "AppleCare+ covers liquid damage with a $99 deductible; liquid-damage remediation cost is well under the replacement threshold, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_applecare#2.2",
+      "sop_iphone15_repair#6.1",
+      "sop_iphone15_repair#6.3"
+    ]
+  },
+  {
+    "case_id": "C11",
+    "claim_text": "iPhone 15 shuts down unexpectedly at 30% battery during travel.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "BATTERY",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "AppleCare+ covers battery malfunction under the other-damage deductible tier of $99; battery replacement is cheap relative to the device, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_applecare#2.3",
+      "sop_iphone15_repair#3.1",
+      "sop_iphone15_repair#3.3"
+    ]
+  },
+  {
+    "case_id": "C12",
+    "claim_text": "iPhone 15 Pro Max camera fails to focus and the camera app crashes on launch.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "HARDWARE_MALFUNCTION",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "AppleCare+ covers manufacturing-defect hardware malfunctions like a failing camera module at no deductible; camera module replacement is cheap relative to the device, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_applecare#2.4",
+      "sop_iphone15_repair#7.1",
+      "sop_iphone15_repair#7.3"
+    ]
+  },
+  {
+    "case_id": "C13",
+    "claim_text": "iPhone 15 back glass is shattered after a fall at the gym.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "OTHER_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "AppleCare+ covers other accidental damage such as back-glass cracks with a $99 deductible; back-glass replacement is cheap relative to the device, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_applecare#2.5",
+      "sop_iphone15_repair#4.1",
+      "sop_iphone15_repair#4.3"
+    ]
+  },
+  {
+    "case_id": "C14",
+    "claim_text": "iPhone 15 was lost during a trip and cannot be located via Find My.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "LOST_STOLEN",
+    "expected_verdict": "DENIED_NOT_COVERED",
+    "ground_truth_answer": "Base AppleCare+ (without Theft and Loss) does not cover lost or stolen devices, so the claim is denied as not covered.",
+    "relevant_chunk_ids": [
+      "policy_applecare#3.1"
+    ]
+  },
+  {
+    "case_id": "C15",
+    "claim_text": "iPhone 15 Plus screen is cracked after being dropped at work.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "policy_effective_date": "2025-06-15",
+    "expected_incident_type": "SCREEN_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "AppleCare+ has no waiting period, so a device enrolled the same day as the claim is still covered; screen repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_applecare#2.1",
+      "sop_iphone15_repair#2.1",
+      "sop_iphone15_repair#2.3"
+    ]
+  },
+  {
+    "case_id": "C16",
+    "claim_text": "iPhone 15 Pro Max got wet during a rainstorm and now the screen does not respond to touch.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "LIQUID_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "The described symptom (unresponsive touch after water exposure) is liquid damage, not screen damage; AppleCare+ covers liquid damage with a $99 deductible and repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_applecare#2.2",
+      "sop_iphone15_repair#6.1",
+      "sop_iphone15_repair#6.3"
+    ]
+  },
+  {
+    "case_id": "C17",
+    "claim_text": "Customer's iPhone 15 screen is cracked after being dropped over the weekend.",
+    "carrier": "T-Mobile",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "SCREEN_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "The Asurion T-Mobile plan covers screen damage with a $29 deductible; screen repair cost is far below the replacement threshold, so repair is recommended. No T-Mobile-specific policy document exists in this corpus, so only the SOP repair chunks are relevant evidence.",
+    "relevant_chunk_ids": [
+      "sop_iphone15_repair#2.1",
+      "sop_iphone15_repair#2.3"
+    ]
+  },
+  {
+    "case_id": "C18",
+    "claim_text": "iPhone 15 was submerged in water while at the gym and will not power on.",
+    "carrier": "AT&T",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "LIQUID_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "AT&T Protect Advantage covers liquid damage with a $125 deductible; liquid-damage remediation cost is well under the replacement threshold, so repair is recommended. No AT&T-specific policy document exists in this corpus, so only the SOP repair chunks are relevant evidence.",
+    "relevant_chunk_ids": [
+      "sop_iphone15_repair#6.1",
+      "sop_iphone15_repair#6.3"
+    ]
+  },
+  {
+    "case_id": "C19",
+    "claim_text": "Customer's iPhone 13 was stolen during a break-in at their home.",
+    "carrier": "T-Mobile",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "LOST_STOLEN",
+    "expected_verdict": "RECOMMEND_REPLACEMENT",
+    "ground_truth_answer": "The Asurion T-Mobile plan covers lost or stolen devices with a $229 deductible; a stolen device cannot be repaired, so replacement is recommended. No relevant document chunk exists in this 3-document corpus for this carrier/device combination.",
+    "relevant_chunk_ids": []
+  },
+  {
+    "case_id": "C20",
+    "claim_text": "iPhone 14 Pro was stolen from the customer's car last week.",
+    "carrier": "AT&T",
+    "claim_date": "2025-06-15",
+    "policy_effective_date": "2025-06-05",
+    "expected_incident_type": "LOST_STOLEN",
+    "expected_verdict": "DENIED_WAITING_PERIOD",
+    "ground_truth_answer": "The device was enrolled only 10 days before the claim, inside AT&T's 30-day waiting period, so the claim is denied under DENIED_WAITING_PERIOD even though lost/stolen is otherwise covered.",
+    "relevant_chunk_ids": []
+  },
+  {
+    "case_id": "C21",
+    "claim_text": "Galaxy S23 screen is shattered after a fall at the gym.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "SCREEN_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "Verizon covers screen damage with a $29 deductible regardless of device brand; screen repair is cheap relative to any modern smartphone's MSRP, so repair is recommended. The SOP in this corpus only documents iPhone 15 family procedures, so no SOP chunk is relevant for a Galaxy device.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.1"
+    ]
+  },
+  {
+    "case_id": "C22",
+    "claim_text": "Pixel 9 battery drains fully within two hours during normal use.",
+    "carrier": "T-Mobile",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "BATTERY",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "The Asurion T-Mobile plan covers battery malfunction with a $49 deductible; battery replacement is cheap relative to any modern smartphone's MSRP, so repair is recommended. No relevant document chunk exists in this 3-document corpus for this carrier/device combination.",
+    "relevant_chunk_ids": []
+  },
+  {
+    "case_id": "C23",
+    "claim_text": "Something is wrong with the customer's phone and it needs to be looked at.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "OTHER_DAMAGE",
+    "expected_verdict": "MANUAL_REVIEW",
+    "ground_truth_answer": "The narrative names no device and no specific symptom, so the extractor cannot identify a device model or damage type with confidence; without a clear device, repair-SOP evidence retrieval cannot succeed, and the claim should be routed to manual review rather than guessed.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.6"
+    ]
+  },
+  {
+    "case_id": "C24",
+    "claim_text": "iPhone 16 Pro screen is cracked after being dropped at home.",
+    "carrier": "Apple",
+    "claim_date": "2025-06-15",
+    "expected_incident_type": "SCREEN_DAMAGE",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "AppleCare+ covers screen damage with a $29 deductible regardless of iPhone generation; repair cost is far below the replacement threshold, so repair is recommended. The SOP in this corpus is scoped to the iPhone 15 family only, so no SOP chunk is relevant for an iPhone 16 Pro.",
+    "relevant_chunk_ids": [
+      "policy_applecare#2.1"
+    ]
+  },
+  {
+    "case_id": "C25",
+    "claim_text": "iPhone 15 Pro shuts down unexpectedly at 30% battery during a commute.",
+    "carrier": "Verizon",
+    "claim_date": "2025-06-15",
+    "policy_effective_date": "2025-05-31",
+    "expected_incident_type": "BATTERY",
+    "expected_verdict": "RECOMMEND_REPAIR",
+    "ground_truth_answer": "The device was enrolled exactly 15 days before the claim, which satisfies (not violates) Verizon's 15-day waiting period boundary; battery replacement is cheap relative to the device, so repair is recommended.",
+    "relevant_chunk_ids": [
+      "policy_verizon#3.4",
+      "sop_iphone15_repair#3.1",
+      "sop_iphone15_repair#3.3"
+    ]
+  }
+]
