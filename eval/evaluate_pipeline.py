@@ -32,7 +32,7 @@ def _context_precision_at_k(retrieved_ids: list[str], relevant_ids: list[str]) -
 def _retrieve_and_rerank(query: str, mode: str) -> list[str]:
     retriever = get_retriever()
     candidates = retriever.search(query, mode=mode)
-    passing, _ = rerank(query, candidates)
+    passing, _ = rerank(query, candidates, use_context=mode != "dense_raw")
     if passing:
         return [r["chunk"].chunk_id for r in passing]
     return [r["chunk"].chunk_id for r in candidates[:RERANK_TOP_N]]

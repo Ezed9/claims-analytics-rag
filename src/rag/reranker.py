@@ -24,12 +24,17 @@ def _sigmoid(logits: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-logits))
 
 
-def rerank(query: str, candidates: list[dict]) -> tuple[list[dict], bool]:
+def rerank(
+    query: str, candidates: list[dict], use_context: bool = True
+) -> tuple[list[dict], bool]:
     if not candidates:
         return [], False
 
     cross_encoder = _get_cross_encoder()
-    pairs = [(query, c["chunk"].contextualized_text) for c in candidates]
+    pairs = [
+        (query, c["chunk"].contextualized_text if use_context else c["chunk"].raw_text)
+        for c in candidates
+    ]
     logits = cross_encoder.predict(pairs, convert_to_numpy=True)
     scores = _sigmoid(np.asarray(logits, dtype=float))
 
