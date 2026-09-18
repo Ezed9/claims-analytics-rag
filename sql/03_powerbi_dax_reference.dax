@@ -1,0 +1,49 @@
+// Power BI DAX measure reference for the Warranty Claims Analytics model.
+// Assumes fact_claims is related to dim_device, dim_policy, dim_repair_depot,
+// and dim_date on their respective surrogate keys.
+
+FCR Rate =
+DIVIDE(
+    CALCULATE(COUNTROWS(fact_claims), fact_claims[is_first_contact_resolved] = TRUE),
+    COUNTROWS(fact_claims)
+)
+
+MTTR (Mean Time To Resolution, hrs) =
+AVERAGE(fact_claims[triage_cycle_time_hours])
+
+Net Savings (Replacement Avoided) =
+SUMX(
+    FILTER(fact_claims, fact_claims[recommended_action] = "REPAIR"),
+    fact_claims[replacement_device_cost] - fact_claims[actual_repair_cost]
+)
+
+Net Payout Total =
+SUM(fact_claims[net_payout])
+
+Anomaly Rate =
+VAR ElevatedClaims =
+    CALCULATE(
+        COUNTROWS(fact_claims),
+        FILTER(vw_claim_velocity_risk, vw_claim_velocity_risk[risk_tier] = "ELEVATED")
+    )
+RETURN
+    DIVIDE(ElevatedClaims, COUNTROWS(fact_claims))
+
+YoY Claims Growth =
+VAR CurrentYearClaims =
+    CALCULATE(COUNTROWS(fact_claims), dim_date[calendar_year] = MAX(dim_date[calendar_year]))
+VAR PriorYearClaims =
+    CALCULATE(
+        COUNTROWS(fact_claims),
+        dim_date[calendar_year] = MAX(dim_date[calendar_year]) - 1
+    )
+RETURN
+    DIVIDE(CurrentYearClaims - PriorYearClaims, PriorYearClaims)
+
+Carrier Loss Ratio =
+VAR TotalPremium =
+    SUMX(dim_policy, dim_policy[monthly_premium_usd] * 12)
+VAR TotalPayout =
+    SUM(fact_claims[net_payout])
+RETURN
+    DIVIDE(TotalPayout, TotalPremium)
