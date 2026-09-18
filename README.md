@@ -137,33 +137,44 @@ Claude Desktop config (`claude_desktop_config.json`):
 
 All numbers below are the actual output of `python eval/evaluate_pipeline.py`
 and `python eval/statistical_significance.py` against the 25-case golden set
-in `eval/golden_dataset.json`, run under the **no-LLM-key, rule_based_fallback
-extractor** condition (no `GEMINI_API_KEY` / `ANTHROPIC_API_KEY` set).
+in `eval/golden_dataset.json`. Retrieval metrics are LLM-free at query time;
+the contextual index uses the committed `data/chunk_context_cache.json`
+(41/41 situating sentences generated once with Gemini flash-lite models via
+`python src/rag/contextual_chunker.py --build-context`). Verdict accuracy
+below uses the rule-based fallback extractor (`GEMINI_API_KEY=` unset for
+the run) so it is reproducible without an API key.
 
 | Metric | Condition | Value |
 | --- | --- | --- |
 | Verdict accuracy | rule-based fallback extractor, 25 cases | 88.0% (22/25) |
-| Context precision — hybrid_contextual | non-LLM, reference-based, top-3 reranked evidence | 0.5400 ± 0.4276 |
-| Context precision — dense_raw | non-LLM, reference-based, top-3 reranked evidence | 0.5733 ± 0.4139 |
-| Wilcoxon signed-rank (hybrid > dense) | one-sided, α = 0.05, n = 25 (6 non-zero pairs) | statistic = 6.0, p = 0.8413 → **fail to reject H0** |
-| Ragas faithfulness / context precision (LLM judge) | skipped — no API key | not run |
+| Context precision — hybrid_contextual | BM25 + dense RRF over contextualized chunks, reranked on contextualized text | 0.5867 ± 0.4220 |
+| Context precision — dense_raw (baseline) | dense only over raw chunks, reranked on raw text | 0.6133 ± 0.4075 |
+| Wilcoxon signed-rank (hybrid > dense) | one-sided, α = 0.05, n = 25 (8 non-zero pairs) | statistic = 13.5, p = 0.7451 → **fail to reject H0** |
+| Ragas faithfulness / context precision (LLM judge) | `--ragas-limit N` with a Gemini key | not yet reported |
 
-**The Wilcoxon test does not show hybrid_contextual beating dense_raw on
-this corpus** — an honest negative result, not tuned away. Two real
-retrieval bugs were found and fixed while investigating (BM25 was scoring
-stopword/number fragments like `"s"`, `"at"`, `"00"` with an inflated IDF on
-this tiny ~41-chunk corpus, occasionally outranking genuinely relevant
-chunks; fixed by filtering stopwords/short tokens before BM25 tokenization).
-After that fix, isolating the dense-only comparison (contextualized text vs.
-raw text, no BM25 at all) showed the remaining gap is **not a bug**: on this
-corpus's very short chunks (e.g. a 6-word "Part cost / Labor" clause), the
-deterministic `[Document: ... | Scope: ... | Section: ...]` header — which
-carries no LLM-generated situating sentence here, since no key is
-configured — is a large fraction of the embedded text and mildly dilutes
-the embedding's focus on the specific clause. The full Anthropic Contextual
-Retrieval technique (LLM-generated situating sentences layered on top of
-the deterministic header) was not live-tested and may close or reverse this
-gap; it was not tuned into the golden set to force a different result.
+**Contextual hybrid retrieval does not beat the dense-only baseline on this
+corpus** — an honest negative result, not tuned away. Adding LLM situating
+sentences raised hybrid precision from 0.540 to 0.587, but the clean
+baseline is 0.613.
+
+Evaluation methodology fixes made along the way (each changed the numbers,
+none were chosen to favour the hypothesis):
+- BM25 was scoring stopword/number fragments (`"s"`, `"at"`, `"00"`) with an
+  inflated IDF on this ~41-chunk corpus; fixed by filtering stopwords and
+  short tokens before tokenization.
+- The cross-encoder originally scored *contextualized* text for both modes,
+  leaking the context into the dense_raw baseline. The baseline now reranks
+  raw text, making the comparison a true ablation.
+
+Per-case analysis of the 8 differing cases points at two real causes rather
+than noise alone: (1) retrieval queries are the bare claim narrative with no
+carrier, so AppleCare vs. Verizon policy clauses compete on wording and the
+context headers amplify that; (2) the situating prompt sees only the document
+title and chunk, not the section heading, so the six short "Parts and Labor"
+clauses received near-identical generic sentences ("specifies the part cost
+and labor duration…"). Anthropic's method conditions on the whole document;
+doing so, and adding the carrier to the query, are the natural next
+experiments — to be evaluated on a held-out set, not this golden set.
 
 Two real orchestrator bugs were also found and fixed during evaluation,
 independent of the retrieval question above: (1) `LOST_STOLEN` claims were
@@ -181,20 +192,18 @@ rather than fabricating repair-cost evidence it doesn't have.
 
 ## Known Limitations
 
-- The Anthropic and Gemini extraction/judge paths are implemented as
-  first-class code paths but were not live-tested in this build (no API
-  key was available in the build environment); only the
-  `rule_based_fallback` extractor and the non-LLM reference-based context
-  precision metric were exercised end-to-end.
+- The Gemini path is live-tested (entity extraction and situating-sentence
+  generation). The Anthropic path (`claude-sonnet-5` tool use with
+  `cache_control` prompt caching) is implemented but has not been run
+  against a live key. Gemini free-tier quotas are ~20 requests/day per
+  model, which is why the Ragas LLM judge is capped with `--ragas-limit`.
 - The repair-SOP document (`sop_iphone15_repair.md`) only covers the
   iPhone 15 family. Claims for other devices (Galaxy S23, Pixel 9, iPhone 16
   Pro, etc.) correctly fall back to `MANUAL_REVIEW` for lack of evidence
   rather than reusing iPhone-15 costs — see the golden-set results above.
 - On this small (~41-chunk) document corpus, hybrid_contextual retrieval
-  did not statistically beat dense_raw retrieval (see Benchmark Results);
-  the gap is attributed to the deterministic-only contextual header (no
-  LLM situating sentence) diluting embeddings of very short chunks, not to
-  a retrieval bug — see the discussion above.
+  did not statistically beat the dense_raw baseline, even with LLM
+  situating sentences (see Benchmark Results for the per-case analysis).
 - `dim_policy` has no per-customer policy number or enrollment date; claim
   velocity is scored per policy *product* (carrier/plan), not per
   individual customer, since the schema (as specified) has no customer
