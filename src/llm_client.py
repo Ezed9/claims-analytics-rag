@@ -56,7 +56,7 @@ def _extract_with_gemini(
     function_declaration = types.FunctionDeclaration(
         name=tool_schema["name"],
         description=tool_schema.get("description", ""),
-        parameters=tool_schema["input_schema"],
+        parameters_json_schema=tool_schema["input_schema"],
     )
     tool = types.Tool(function_declarations=[function_declaration])
     config = types.GenerateContentConfig(
