@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/claims_warehouse.duckdb
+data/chroma/
+data/chunk_context_cache.json
+audit_logs/*.json
+eval/results.json
+.DS_Store
+.ruff_cache/
