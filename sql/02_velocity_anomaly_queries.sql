@@ -32,7 +32,7 @@ inter_claim AS (
         *,
         DATE_DIFF(
             'day',
-            LAG(filing_date) OVER (PARTITION BY policy_key, device_key ORDER BY filing_date),
+            LAG(filing_date) OVER (PARTITION BY policy_key, device_key ORDER BY filing_date, claim_key),
             filing_date
         ) AS days_since_last_claim
     FROM claim_dates
