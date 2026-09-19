@@ -93,6 +93,7 @@ python -c "from src.agent.orchestrator import run_triage; print(run_triage('iPho
 python eval/evaluate_pipeline.py
 python eval/statistical_significance.py
 streamlit run src/dashboard/app.py
+pytest tests -q
 ```
 
 With an LLM key, build the contextual-retrieval index once (resumable; it
@@ -103,6 +104,22 @@ Ragas judge on free-tier quotas:
 python src/rag/contextual_chunker.py --build-context
 python eval/evaluate_pipeline.py --ragas-limit 5
 ```
+
+## Dashboard
+
+Three tabs, themed with an IBM Carbon-derived palette (`.streamlit/config.toml`;
+primary `#0F62FE`, text/primary/danger/success all WCAG AA on white):
+
+- **Overview** — KPI cards (120k claims, first-contact resolution, cycle time,
+  net payout), claim volume by carrier, recommended-action mix.
+- **Velocity & anomalies** — claim-velocity risk tiers (ELEVATED / MODERATE /
+  LOW), filterable table with a 0-100 score bar, depot cycle-time ranking.
+- **Claim triage** — one-click example claims, then a color-coded verdict,
+  repair-vs-replace cost bar, and expanders for policy check, retrieved
+  evidence, and the hash-verified audit log.
+
+Decision colors (repair / replace / denied) are deliberately separate from the
+risk-tier colors so "denied" is never read as "high fraud risk".
 
 ## LLM Provider Switch
 
@@ -191,6 +208,10 @@ SOP's documented scope — where the system correctly returns `MANUAL_REVIEW`
 rather than fabricating repair-cost evidence it doesn't have.
 
 ## Known Limitations
+
+- The velocity view originally ordered same-day claims non-deterministically
+  (`LAG ... ORDER BY filing_date` with ties), so risk-tier counts drifted
+  between queries; it now tiebreaks on `claim_key` and counts are stable.
 
 - The Gemini path is live-tested (entity extraction and situating-sentence
   generation). The Anthropic path (`claude-sonnet-5` tool use with
