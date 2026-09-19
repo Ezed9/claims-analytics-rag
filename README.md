@@ -118,6 +118,10 @@ primary `#0F62FE`, text/primary/danger/success all WCAG AA on white):
   repair-vs-replace cost bar, and expanders for policy check, retrieved
   evidence, and the hash-verified audit log.
 
+![Overview](docs/screenshots/overview.png)
+![Velocity and anomalies](docs/screenshots/velocity.png)
+![Claim triage](docs/screenshots/triage.png)
+
 Decision colors (repair / replace / denied) are deliberately separate from the
 risk-tier colors so "denied" is never read as "high fraud risk".
 
