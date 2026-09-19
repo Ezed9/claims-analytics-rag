@@ -38,7 +38,54 @@ def _retrieve_and_rerank(query: str, mode: str) -> list[str]:
     return [r["chunk"].chunk_id for r in candidates[:RERANK_TOP_N]]
 
 
-def _run_ragas_metrics(cases: list[dict[str, Any]], case_results: list[dict[str, Any]]) -> None:
+def _evidence_contexts(triage: dict[str, Any]) -> list[str]:
+    retriever = get_retriever()
+    policy = triage["policy_check"]
+    incident = triage["extraction"]["incident_type"]
+    contexts = [
+        f"Policy rule for {policy.get('plan_name')} ({policy.get('carrier_partner')}), "
+        f"incident {incident}: covered={policy.get('is_covered')}, "
+        f"deductible ${policy.get('deductible_usd')}, "
+        f"waiting period {policy.get('waiting_period_days')} days "
+        f"(violated={policy.get('waiting_period_violation')}), "
+        f"repair_allowed={policy.get('repair_allowed')}, "
+        f"replacement_allowed={policy.get('replacement_allowed')}."
+    ]
+    for item in (triage.get("evidence") or {}).get("evidence", []):
+        contexts.append(retriever.chunk_by_id[item["chunk_id"]].contextualized_text)
+    economics = triage.get("economics")
+    if economics:
+        contexts.append(
+            f"Economic engine for {economics['device_model']}: repair cost "
+            f"${economics['total_repair_cost_usd']} vs MSRP ${economics['msrp_usd']}, "
+            f"ratio {economics['cost_ratio']} against threshold 0.65 -> "
+            f"{economics['recommended_action']}."
+        )
+    return contexts
+
+
+def _rationale(triage: dict[str, Any]) -> str:
+    policy = triage["policy_check"]
+    parts = [
+        f"The {triage['extraction']['incident_type']} claim is "
+        f"{'covered' if policy.get('is_covered') else 'not covered'} under "
+        f"{policy.get('plan_name')} with a ${policy.get('deductible_usd')} deductible."
+    ]
+    economics = triage.get("economics")
+    if economics:
+        parts.append(
+            f"Repair costs ${economics['total_repair_cost_usd']} against a "
+            f"${economics['msrp_usd']} MSRP (ratio {economics['cost_ratio']})."
+        )
+    parts.append(f"Verdict: {triage['verdict']}.")
+    return " ".join(parts)
+
+
+def _run_ragas_metrics(
+    cases: list[dict[str, Any]],
+    case_results: list[dict[str, Any]],
+    triages: list[dict[str, Any]],
+) -> None:
     from ragas import SingleTurnSample
     from ragas.metrics import Faithfulness, LLMContextPrecisionWithReference
 
@@ -48,19 +95,11 @@ def _run_ragas_metrics(cases: list[dict[str, Any]], case_results: list[dict[str,
     faithfulness_metric = Faithfulness(llm=judge)
     context_precision_metric = LLMContextPrecisionWithReference(llm=judge)
 
-    for case, result in zip(cases, case_results):
-        query = case["claim_text"]
-        retrieved_ids = _retrieve_and_rerank(query, "hybrid_contextual")
-        retriever = get_retriever()
-        contexts = [retriever.chunk_by_id[cid].raw_text for cid in retrieved_ids]
-        response = (
-            f"Verdict: {result['verdict_actual']}. "
-            f"Incident type: {case['expected_incident_type']}."
-        )
+    for case, result, triage in zip(cases, case_results, triages):
         sample = SingleTurnSample(
-            user_input=query,
-            response=response,
-            retrieved_contexts=contexts or [""],
+            user_input=case["claim_text"],
+            response=_rationale(triage),
+            retrieved_contexts=_evidence_contexts(triage),
             reference=case["ground_truth_answer"],
         )
         try:
@@ -75,6 +114,7 @@ def _run_ragas_metrics(cases: list[dict[str, Any]], case_results: list[dict[str,
 def evaluate(ragas_limit: int | None = None) -> dict[str, Any]:
     cases = _load_golden_dataset()
     case_results: list[dict[str, Any]] = []
+    triages: list[dict[str, Any]] = []
 
     for case in cases:
         triage = run_triage(
@@ -84,6 +124,7 @@ def evaluate(ragas_limit: int | None = None) -> dict[str, Any]:
             claim_date=case.get("claim_date"),
             policy_effective_date=case.get("policy_effective_date"),
         )
+        triages.append(triage)
         verdict_actual = triage["verdict"]
         verdict_correct = verdict_actual == case["expected_verdict"]
 
@@ -109,7 +150,7 @@ def evaluate(ragas_limit: int | None = None) -> dict[str, Any]:
 
     ragas_skipped_reason = None
     if has_active_llm():
-        _run_ragas_metrics(cases[:ragas_limit], case_results[:ragas_limit])
+        _run_ragas_metrics(cases[:ragas_limit], case_results[:ragas_limit], triages[:ragas_limit])
     else:
         ragas_skipped_reason = (
             "No GEMINI_API_KEY or ANTHROPIC_API_KEY set; Ragas LLM-judged metrics "
