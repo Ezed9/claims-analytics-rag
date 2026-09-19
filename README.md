@@ -158,7 +158,7 @@ in `eval/golden_dataset.json`. Retrieval metrics are LLM-free at query time;
 the contextual index uses the committed `data/chunk_context_cache.json`
 (41/41 situating sentences generated once with Gemini flash-lite models via
 `python src/rag/contextual_chunker.py --build-context`). Verdict accuracy
-below uses the rule-based fallback extractor (`GEMINI_API_KEY=` unset for
+below uses the rule-based fallback extractor (the live Gemini extractor also scored 88% on the same set) (`GEMINI_API_KEY=` unset for
 the run) so it is reproducible without an API key.
 
 | Metric | Condition | Value |
@@ -167,7 +167,7 @@ the run) so it is reproducible without an API key.
 | Context precision — hybrid_contextual | BM25 + dense RRF over contextualized chunks, reranked on contextualized text | 0.5867 ± 0.4220 |
 | Context precision — dense_raw (baseline) | dense only over raw chunks, reranked on raw text | 0.6133 ± 0.4075 |
 | Wilcoxon signed-rank (hybrid > dense) | one-sided, α = 0.05, n = 25 (8 non-zero pairs) | statistic = 13.5, p = 0.7451 → **fail to reject H0** |
-| Ragas faithfulness / context precision (LLM judge) | `--ragas-limit N` with a Gemini key | not yet reported |
+| Ragas faithfulness / context precision (LLM judge) | `--ragas-limit 3`, Gemini judge, first 3 cases only (free-tier quota), judged on the real evidence + policy facts + cost breakdown | faithfulness 1.00, context precision 0.67 (0 judge errors; n=3, so indicative only) |
 
 **Contextual hybrid retrieval does not beat the dense-only baseline on this
 corpus** — an honest negative result, not tuned away. Adding LLM situating
