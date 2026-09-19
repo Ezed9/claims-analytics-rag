@@ -1,0 +1,26 @@
+[server]
+fileWatcherType = "none"
+
+[theme]
+base = "light"
+primaryColor = "#0F62FE"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F4F4"
+textColor = "#161616"
+borderColor = "#E0E0E0"
+baseRadius = "6px"
+showWidgetBorder = true
+font = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "'Inter':https://fonts.googleapis.com/css2?family=Inter:wght@600;700&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+greenColor = "#198038"
+redColor = "#DA1E28"
+orangeColor = "#8A3800"
+blueColor = "#0F62FE"
+violetColor = "#6929C4"
+grayColor = "#525252"
+chartCategoricalColors = ["#6929C4", "#1192E8", "#005D5D", "#9F1853", "#B28600", "#8A3800"]
+
+[theme.sidebar]
+backgroundColor = "#F4F4F4"
+secondaryBackgroundColor = "#FFFFFF"
