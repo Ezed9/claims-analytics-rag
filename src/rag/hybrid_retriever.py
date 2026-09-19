@@ -12,7 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.config import CHROMA_DIR, EMBED_MODEL_NAME, RRF_K, TOP_K_CANDIDATES
+from src.config import EMBED_MODEL_NAME, RRF_K, TOP_K_CANDIDATES
 from src.rag.contextual_chunker import Chunk, build_chunks
 
 QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
@@ -56,7 +56,9 @@ class HybridRetriever:
         self.raw_embeddings = model.encode(raw_texts, normalize_embeddings=True)
         self.bm25 = BM25Okapi([_tokenize(t) for t in contextual_texts])
 
-        self.chroma_client = chromadb.PersistentClient(path=str(CHROMA_DIR))
+        # In-memory: the index is rebuilt from the documents on every start, and a
+        # shared on-disk store let one process delete another process's collections.
+        self.chroma_client = chromadb.EphemeralClient()
         self._contextual_collection = self._sync_collection(
             "chunks_contextual", contextual_texts, self.contextual_embeddings
         )
